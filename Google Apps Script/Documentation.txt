@@ -1,0 +1,29 @@
+===========================================
+Google Chats to Google Sheets App Script
+===========================================
+
+This script pulls data from the Google Chats API and compiles it all into Google Sheets. 
+The Data in Google Sheets can then be referenced later more easily for other purposes.
+
+
+================
+Configuration
+================
+
+Set up the Manifest File
+  - Use the appscript.json file content as the json for your manifest file
+
+Configure Custom Script Properties
+  - ServiceAccountEmail
+  - LookBackHours
+  - SheetId
+  - SheetName
+
+
+===================
+Additional Notes
+===================
+
+You will need to configure your google workspace settings and service account email appropriately
+
+Univium will release a youtube video in the near future to assist with configuration
