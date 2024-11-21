@@ -1,0 +1,32 @@
+===============================
+SEO Site Audit Documentation
+===============================
+
+NOTICE:
+=======
+The code snippets in this SEO Site Audit Folder are taken from a project with a previous client. 
+Certain elements of this script have been removed due to privacy concerns, other concerns etc. 
+Therefore, certain elements may need to be updated to function properly. 
+If you need any help with this, please feel free to reach out at Patrick@Univium.com
+=================
+
+Primary Starting Point: 
+=======================
+The primary starting file for this project is: 
+"user-website-crawl.php"
+
+
+Project Summary:
+=================
+This script performs an SEO Site Audit by crawling all the pages of a given Url, then analyzing
+the contents of the pages crawled and scoring the pages and overall website according to specified criteria.
+
+
+Working Example: 
+=================
+Given that this was designed for a previous client as a one time project, we do not have 
+a public working example that can be reviewed. 
+
+However, we hope to have a public working example for this project soon at https://univium.com
+
+
