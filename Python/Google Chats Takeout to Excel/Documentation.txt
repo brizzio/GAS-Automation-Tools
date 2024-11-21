@@ -1,0 +1,7 @@
+==================================
+Google Chats Takeout to Excel
+==================================
+This python script will parse through Google Chat data folders that have been exported from Google Takeout. 
+After parsing through the folders and data, it will output the data to an excel file. 
+
+Google Takeout URL: https://takeout.google.com/
