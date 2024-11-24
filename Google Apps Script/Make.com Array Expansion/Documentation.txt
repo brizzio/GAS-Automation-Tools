@@ -1,0 +1,111 @@
+Google Apps Script Documentation
+================================
+
+Overview
+--------
+This script acts as an API endpoint for tools like Make.com. It processes data 
+from an Airtable table containing a column with linked records, transforming it 
+into an expanded "junction table" format. This is useful for normalizing 
+many-to-many relationships (e.g., linked record fields in Airtable) and exporting 
+the data to tools like Google Sheets.
+
+Purpose
+-------
+- Input: JSON data containing records with a parent ID and an array of linked 
+  child IDs (linked records).
+- Output: A JSON object that expands the linked records into a "junction table" 
+  structure, with each combination of parent and child IDs represented as a 
+  separate row.
+
+API Details
+-----------
+Endpoint:
+- The script is deployed as a web app, with the `doPost` function serving as 
+  the main entry point.
+
+Request Format:
+- The script expects an HTTP POST request with a JSON payload. Example:
+  [
+    {
+      "parentId": "123",
+      "linkedRecords": ["456", "789"]
+    },
+    {
+      "parentId": "124",
+      "linkedRecords": ["567"]
+    }
+  ]
+
+Response Format:
+- The response is a JSON object containing:
+  1. An array of transformed records in junction table format.
+  2. A metadata field `__IMTAGGLENGTH__` indicating the total number of rows.
+
+Example response:
+[
+  {
+    "array": [
+      {
+        "parentIdlinkedRecordsId": "123.456",
+        "parentId": "123",
+        "linkedRecordId": "456"
+      },
+      {
+        "parentIdlinkedRecordsId": "123.789",
+        "parentId": "123",
+        "linkedRecordId": "789"
+      },
+      {
+        "parentIdlinkedRecordsId": "124.567",
+        "parentId": "124",
+        "linkedRecordId": "567"
+      }
+    ],
+    "__IMTAGGLENGTH__": 3
+  }
+]
+
+Script Functions
+----------------
+1. doPost(e)
+   - Purpose: Handles incoming requests, parses the JSON payload, and returns 
+     the transformed data.
+   - Error Handling: Captures and logs errors, returning an error object in 
+     the response.
+
+2. transformData(inputData)
+   - Purpose: Processes the input data to:
+     a. Dynamically detect the parent ID and linked record fields.
+     b. Expand each parent-child relationship into its own row.
+     c. Create a unique identifier combining parent and child IDs.
+   - Key Features:
+     - Handles both single and multiple records.
+     - Automatically identifies parent and child keys in the input data.
+
+Deployment
+----------
+1. Open the Google Apps Script Editor and paste the code into a new project.
+2. Deploy the script as a web app:
+   a. Go to "Deploy" > "New Deployment."
+   b. Select "Web App."
+   c. Set "Execute as:" Me.
+   d. Set "Who has access:" Anyone with the link.
+3. Copy the deployment URL and use it in Make.com or another tool to send 
+   POST requests.
+
+Notes
+-----
+- Field Naming:
+  The output field names are dynamically generated based on the input structure. 
+  Ensure the input JSON is consistently formatted.
+  
+- Error Responses:
+  If an error occurs, the response includes an `error` field. Example:
+  {
+    "error": "SyntaxError: Unexpected token o in JSON at position 1"
+  }
+
+- Logging:
+  Logs are available in the Google Apps Script editor for debugging purposes.
+
+End of Documentation
