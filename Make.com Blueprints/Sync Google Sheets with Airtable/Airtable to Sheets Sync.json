@@ -1,0 +1,523 @@
+{
+    "name": "Airtable to Sheets Sync (Efficient Method)",
+    "flow": [
+        {
+            "id": 23,
+            "module": "util:SetVariable2",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "name": "Limit",
+                "scope": "roundtrip",
+                "value": "1000"
+            },
+            "metadata": {
+                "designer": {
+                    "x": 0,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "scope": {
+                            "label": "One cycle"
+                        }
+                    }
+                },
+                "expect": [
+                    {
+                        "name": "name",
+                        "type": "text",
+                        "label": "Variable name",
+                        "required": true
+                    },
+                    {
+                        "name": "scope",
+                        "type": "select",
+                        "label": "Variable lifetime",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "roundtrip",
+                                "execution"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "value",
+                        "type": "any",
+                        "label": "Variable value"
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "Limit",
+                        "type": "any",
+                        "label": "Limit"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 6,
+            "module": "airtable:ActionSearchRecords",
+            "version": 3,
+            "parameters": {
+                "__IMTCONN__": 123456
+            },
+            "mapper": {
+                "base": "appABC123DEF456GH",
+                "sort": [
+                    {
+                        "field": "CreatedDate",
+                        "direction": "asc"
+                    }
+                ],
+                "table": "tblXYZ789MNP123QR",
+                "useColumnId": false
+            },
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 0
+                },
+                "restore": {
+                    "expect": {
+                        "base": {
+                            "mode": "chose",
+                            "label": "Univium"
+                        },
+                        "sort": {
+                            "mode": "chose",
+                            "items": [
+                                {
+                                    "field": {
+                                        "mode": "chose",
+                                        "label": "CreatedDate"
+                                    },
+                                    "direction": {
+                                        "mode": "chose",
+                                        "label": "Ascending"
+                                    }
+                                }
+                            ]
+                        },
+                        "view": {
+                            "mode": "chose"
+                        },
+                        "table": {
+                            "mode": "chose",
+                            "label": "Application"
+                        },
+                        "fields": {
+                            "mode": "chose"
+                        },
+                        "maxRecords": {
+                            "empty": true
+                        },
+                        "useColumnId": {
+                            "mode": "chose"
+                        }
+                    },
+                    "parameters": {
+                        "__IMTCONN__": {
+                            "data": {
+                                "scoped": "true",
+                                "connection": "airtable3"
+                            },
+                            "label": "My Airtable OAuth connection"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "__IMTCONN__",
+                        "type": "account:airtable3,airtable2",
+                        "label": "Connection",
+                        "required": true
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "base",
+                        "type": "select",
+                        "label": "Base",
+                        "required": true
+                    },
+                    {
+                        "name": "useColumnId",
+                        "type": "boolean",
+                        "label": "Use Column ID",
+                        "required": true
+                    },
+                    {
+                        "name": "table",
+                        "type": "select",
+                        "label": "Table",
+                        "required": true
+                    },
+                    {
+                        "name": "formula",
+                        "type": "text",
+                        "label": "Formula"
+                    },
+                    {
+                        "name": "maxRecords",
+                        "type": "integer",
+                        "label": "Limit"
+                    },
+                    {
+                        "name": "sort",
+                        "spec": [
+                            {
+                                "name": "field",
+                                "type": "select",
+                                "label": "Field",
+                                "dynamic": true,
+                                "options": []
+                            },
+                            {
+                                "name": "direction",
+                                "type": "select",
+                                "label": "Direction",
+                                "options": [
+                                    {
+                                        "label": "Descending",
+                                        "value": "desc"
+                                    },
+                                    {
+                                        "label": "Ascending",
+                                        "value": "asc"
+                                    }
+                                ]
+                            }
+                        ],
+                        "type": "array",
+                        "label": "Sort"
+                    },
+                    {
+                        "name": "view",
+                        "type": "select",
+                        "label": "View"
+                    },
+                    {
+                        "name": "fields",
+                        "type": "select",
+                        "label": "Output Fields",
+                        "multiple": true
+                    }
+                ]
+            }
+        },
+        {
+            "id": 15,
+            "module": "builtin:BasicRouter",
+            "version": 1,
+            "mapper": null,
+            "metadata": {
+                "designer": {
+                    "x": 600,
+                    "y": 0
+                }
+            },
+            "routes": [
+                {
+                    "flow": [
+                        {
+                            "id": 27,
+                            "module": "builtin:BasicAggregator",
+                            "version": 1,
+                            "parameters": {
+                                "feeder": 6,
+                                "target": "26.rows"
+                            },
+                            "mapper": {
+                                "values": [
+                                    "{{6.id}}",
+                                    "{{6.ApplicationId}}",
+                                    "{{6.CreatedDate}}",
+                                    "{{6.`ApplicationCategoryId (from ApplicationCategory)`[]}}",
+                                    "{{now}}"
+                                ]
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 900,
+                                    "y": 0
+                                },
+                                "restore": {
+                                    "extra": {
+                                        "feeder": {
+                                            "label": "Airtable - Search Records [6]"
+                                        },
+                                        "target": {
+                                            "label": "Rows"
+                                        }
+                                    },
+                                    "expect": {
+                                        "__IMTTARGET__": {
+                                            "nested": {
+                                                "values": {
+                                                    "mode": "chose",
+                                                    "items": [
+                                                        null,
+                                                        null,
+                                                        null,
+                                                        null,
+                                                        null
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "expect": [
+                                    {
+                                        "name": "values",
+                                        "spec": {
+                                            "name": "value",
+                                            "type": "text",
+                                            "label": "Column"
+                                        },
+                                        "type": "array",
+                                        "label": "Values"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": 30,
+                            "module": "google-sheets:clearValuesFromRange",
+                            "version": 2,
+                            "parameters": {
+                                "__IMTCONN__": 789012
+                            },
+                            "filter": {
+                                "name": "",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{27.`__IMTAGGLENGTH__`}}",
+                                            "b": "1",
+                                            "o": "number:greater"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "range": "A2:Z",
+                                "sheet": "Applications",
+                                "select": "fromAll",
+                                "spreadsheetId": "1ABC2DEF3GHI4JKL5MNO6PQR7STU8VWX"
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 1200,
+                                    "y": 0
+                                },
+                                "restore": {
+                                    "expect": {
+                                        "sheet": {
+                                            "mode": "chose",
+                                            "label": "Applications"
+                                        },
+                                        "select": {
+                                            "label": "Select from all"
+                                        }
+                                    },
+                                    "parameters": {
+                                        "__IMTCONN__": {
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "google"
+                                            },
+                                            "label": "My Google connection"
+                                        }
+                                    }
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "__IMTCONN__",
+                                        "type": "account:google",
+                                        "label": "Connection",
+                                        "required": true
+                                    }
+                                ],
+                                "expect": [
+                                    {
+                                        "name": "select",
+                                        "type": "select",
+                                        "label": "Search Method",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "list",
+                                                "fromAll",
+                                                "map"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "name": "range",
+                                        "type": "text",
+                                        "label": "Range",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "spreadsheetId",
+                                        "type": "text",
+                                        "label": "Spreadsheet ID",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "sheet",
+                                        "type": "select",
+                                        "label": "Sheet Name",
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": 26,
+                            "module": "google-sheets:updateMultipleRows",
+                            "version": 2,
+                            "parameters": {
+                                "__IMTCONN__": 789012
+                            },
+                            "filter": {
+                                "name": "",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{27.`__IMTAGGLENGTH__`}}",
+                                            "b": "1",
+                                            "o": "number:greaterorequal"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "rows": "{{27.array}}",
+                                "range": "A2:Z",
+                                "sheetId": "Applications",
+                                "spreadsheetId": "1ABC2DEF3GHI4JKL5MNO6PQR7STU8VWX",
+                                "valueInputOption": "USER_ENTERED"
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 1500,
+                                    "y": 0
+                                },
+                                "restore": {
+                                    "expect": {
+                                        "rows": {
+                                            "mode": "edit"
+                                        },
+                                        "sheetId": {
+                                            "mode": "edit"
+                                        },
+                                        "valueInputOption": {
+                                            "mode": "chose",
+                                            "label": "User entered"
+                                        }
+                                    },
+                                    "parameters": {
+                                        "__IMTCONN__": {
+                                            "data": {
+                                                "scoped": "true",
+                                                "connection": "google"
+                                            },
+                                            "label": "My Google connection (user@example.com)"
+                                        }
+                                    }
+                                },
+                                "parameters": [
+                                    {
+                                        "name": "__IMTCONN__",
+                                        "type": "account:google",
+                                        "label": "Connection",
+                                        "required": true
+                                    }
+                                ],
+                                "expect": [
+                                    {
+                                        "name": "spreadsheetId",
+                                        "type": "text",
+                                        "label": "Spreadsheet ID",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "valueInputOption",
+                                        "type": "select",
+                                        "label": "Value input option"
+                                    },
+                                    {
+                                        "type": "hidden"
+                                    },
+                                    {
+                                        "mode": "edit",
+                                        "name": "sheetId",
+                                        "type": "select",
+                                        "label": "Sheet Name",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "range",
+                                        "type": "text",
+                                        "label": "Range",
+                                        "required": true
+                                    },
+                                    {
+                                        "mode": "edit",
+                                        "name": "rows",
+                                        "spec": {
+                                            "name": "value",
+                                            "spec": [
+                                                {
+                                                    "name": "values",
+                                                    "spec": {
+                                                        "type": "text",
+                                                        "label": "Column"
+                                                    },
+                                                    "type": "array",
+                                                    "label": "Values",
+                                                    "labels": {
+                                                        "add": "Add value"
+                                                    }
+                                                }
+                                            ],
+                                            "type": "collection",
+                                            "label": "Row"
+                                        },
+                                        "type": "array",
+                                        "label": "Rows"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "metadata": {
+        "instant": false,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "us2.make.com"
+    }
+}
