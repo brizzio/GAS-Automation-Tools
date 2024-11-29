@@ -1,4 +1,4 @@
-function exportCalendarEventsForActiveUser() { 
+function exportCalendarEventsForActiveUser() {
   // Specify the Sheet ID and Sheet Names
   const sheetId = "AAAAAAAAAAAAAAAAAAA"; // Replace with your Google Sheet ID
   const sheetName = "Calendar Data"; // Main data sheet
@@ -17,19 +17,28 @@ function exportCalendarEventsForActiveUser() {
   // Get the currently authenticated user's email
   const activeUserEmail = Session.getActiveUser().getEmail();
 
-  // Retrieve the lookback and lookforward periods from the Controls sheet
-  const lookbackDays = parseInt(controlsSheet.getRange("D6").getValue(), 10);
-  const lookforwardDays = parseInt(controlsSheet.getRange("D8").getValue(), 10);
+  // Detect if the script is being run automatically
+  const triggeredEvent = typeof e !== "undefined"; // `e` is defined for auto-triggers
+  let lookbackDays, lookforwardDays;
 
-  // Ensure the lookback and lookforward values are numbers
-  if (isNaN(lookbackDays) || isNaN(lookforwardDays)) {
-    throw new Error('Invalid lookback or lookforward value in the Controls sheet.');
+  if (triggeredEvent) {
+    // Auto-run: Use default 7 days for lookback and lookforward
+    lookbackDays = 7;
+    lookforwardDays = 7;
+  } else {
+    // Manual run: Retrieve values from the Controls sheet
+    lookbackDays = parseInt(controlsSheet.getRange("D6").getValue(), 10);
+    lookforwardDays = parseInt(controlsSheet.getRange("D8").getValue(), 10);
+
+    // Ensure values are valid
+    if (isNaN(lookbackDays) || lookbackDays <= 0) lookbackDays = 7;
+    if (isNaN(lookforwardDays) || lookforwardDays <= 0) lookforwardDays = 7;
   }
 
   // Get the current time and calculate the lookback and lookforward date ranges
   const now = new Date();
-  const lookbackDate = new Date(now.getTime() - (lookbackDays * 24 * 60 * 60 * 1000)); // Convert days to milliseconds
-  const lookforwardDate = new Date(now.getTime() + (lookforwardDays * 24 * 60 * 60 * 1000));
+  const lookbackDate = new Date(now.getTime() - lookbackDays * 24 * 60 * 60 * 1000); // Convert days to milliseconds
+  const lookforwardDate = new Date(now.getTime() + lookforwardDays * 24 * 60 * 60 * 1000);
 
   // Get the existing data and headers from the sheet
   const dataRange = sheet.getDataRange();
