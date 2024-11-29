@@ -1,4 +1,4 @@
-function exportCalendarEventsForActiveUser() {
+function exportCalendarEventsForActiveUser(e) {
   // Specify the Sheet ID and Sheet Names
   const sheetId = "AAAAAAAAAAAAAAAAAAA"; // Replace with your Google Sheet ID
   const sheetName = "Calendar Data"; // Main data sheet
@@ -17,12 +17,11 @@ function exportCalendarEventsForActiveUser() {
   // Get the currently authenticated user's email
   const activeUserEmail = Session.getActiveUser().getEmail();
 
-  // Detect if the script is being run automatically
-  const triggeredEvent = typeof e !== "undefined"; // `e` is defined for auto-triggers
+  // Check if the function is being run by a time-based trigger
   let lookbackDays, lookforwardDays;
 
-  if (triggeredEvent) {
-    // Auto-run: Use default 7 days for lookback and lookforward
+  if (e && e.triggerUid) {
+    // Auto-run via time-based trigger: Use 7 days for both lookback and lookforward
     lookbackDays = 7;
     lookforwardDays = 7;
   } else {
