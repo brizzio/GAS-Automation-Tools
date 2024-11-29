@@ -1,4 +1,4 @@
-function exportCalendarEventsForActiveUser() {
+function exportCalendarEventsForActiveUser() { 
   // Specify the Sheet ID and Sheet Names
   const sheetId = "AAAAAAAAAAAAAAAAAAA"; // Replace with your Google Sheet ID
   const sheetName = "Calendar Data"; // Main data sheet
@@ -78,17 +78,6 @@ function exportCalendarEventsForActiveUser() {
   // Fetch events for the active user (the one who clicked the button)
   const events = fetchEventsForActiveUser(activeUserEmail);
 
-  // Get the client keywords from the Clients tab
-  const clientData = clientsSheet.getDataRange().getValues();
-  const clientKeywords = clientData.reduce((acc, row) => {
-    const clientName = row[0]; // Assume Client Name is in column A
-    const keywords = row[1]; // Assume Keywords are in column B
-    if (clientName && keywords) {
-      acc[clientName] = keywords.split(','); // Split keywords by commas
-    }
-    return acc;
-  }, {});
-
   // Write events to the sheet
   events.forEach((event, index) => {
     const duration = ((event.endTime - event.startTime) / (1000 * 60 * 60)).toFixed(2); // Duration in hours
@@ -108,23 +97,22 @@ function exportCalendarEventsForActiveUser() {
     sheet.appendRow(row);
     const rowIndex = sheet.getLastRow(); // Get the last row after appending
 
-    // Find the matching client name based on the event title
-    let clientName = "";
-    for (const [name, keywords] of Object.entries(clientKeywords)) {
-      if (keywords.some(keyword => event.title.includes(keyword))) {
-        clientName = name;
-        break;
-      }
-    }
-
-    // Set the client name in the appropriate column (using the actual row number)
-    sheet.getRange(rowIndex, clientNameColumnIndex + 1).setValue(clientName); // Client Name is in the 8th column (index 7)
+    // Insert the formula into the "Client Name" column
+    const clientFormula = `
+      =ARRAYFORMULA(
+        IFERROR(
+          INDEX(Clients!A:A, MATCH(TRUE, ISNUMBER(SEARCH(Clients!B:B, B${rowIndex})), 0)),
+          ""
+        )
+      )
+    `;
+    sheet.getRange(rowIndex, clientNameColumnIndex + 1).setFormula(clientFormula.trim());
   });
 
   // Log the number of events exported
   Logger.log(`${events.length} events exported to the sheet "${sheetName}".`);
 
-  // Now, update the last sync time for the active user
+  // Update the last sync time for the active user
   const controlsRange = controlsSheet.getRange("F6:G10");
   const controlsData = controlsRange.getValues();
   let emailFound = false;
