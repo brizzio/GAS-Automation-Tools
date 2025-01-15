@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      /* (Same styling as before) */
+      * {
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+      }
+      body {
+        margin: 0;
+        background-color: #f8f9fa;
+      }
+      .header-bar {
+        background-color: #1976d2;
+        color: white;
+        padding: 16px;
+      }
+      .header-bar h1 {
+        margin: 0;
+      }
+      .container {
+        max-width: 900px;
+        margin: 24px auto;
+        background-color: #fff;
+        padding: 24px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+      .btn {
+        background-color: #1976d2;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        font-size: 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 8px;
+      }
+      .btn:hover {
+        background-color: #1669bb;
+      }
+      .status {
+        margin-top: 8px;
+        font-style: italic;
+      }
+
+      /* For the main spreadsheet display at the top */
+      .main-spreadsheet-block {
+        background-color: #fafafa;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 16px; /* spacing before the buttons */
+      }
+
+      .main-spreadsheet-title {
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+
+      /* For the discrepancy cards below... */
+      .spreadsheet-card {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        margin-top: 16px;
+        padding: 12px;
+        background-color: #fafafa;
+      }
+      .spreadsheet-title {
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+      .spreadsheet-title span {
+        color: #666;
+        font-size: 12px;
+      }
+      .spreadsheet-title:hover {
+        color: #005cb2;
+      }
+      .spreadsheet-details {
+        display: none;
+        margin-top: 8px;
+      }
+      .tab-card {
+        margin: 12px 0;
+        border-left: 3px solid #1976d2;
+        padding-left: 12px;
+      }
+      .tab-title {
+        font-weight: 600;
+        cursor: pointer;
+        margin: 4px 0;
+      }
+      .tab-title:hover {
+        color: #005cb2;
+      }
+      .tab-details {
+        display: none;
+        margin-top: 4px;
+      }
+      .discrepancy-item {
+        background-color: #fff;
+        border-left: 3px solid #ff7070;
+        margin: 4px 0;
+        padding: 6px 10px;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+      .no-discrepancies {
+        color: #28a745;
+        font-weight: bold;
+      }
+      .hidden {
+        display: none;
+      }
+
+      /* Modal styling (for config) */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: rgba(0,0,0,0.5);
+        z-index: 9999;
+      }
+      .modal-content {
+        background: #fff;
+        width: 600px;
+        margin: 100px auto;
+        padding: 20px;
+        border-radius: 6px;
+        position: relative;
+      }
+      .close-btn {
+        position: absolute;
+        top: 8px; right: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        border: none;
+        background: transparent;
+        font-size: 18px;
+      }
+      .config-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .config-table th, .config-table td {
+        border: 1px solid #ccc;
+        padding: 6px 8px;
+      }
+      .config-table th {
+        background: #f2f2f2;
+      }
+      .error {
+        color: red;
+      }
+    </style>
+  </head>
+  <body onload="initPage()">
+    <!-- The header bar -->
+    <div class="header-bar">
+      <h1>Discrepancy Dashboard (Standalone)</h1>
+    </div>
+
+    <!-- Main container for everything -->
+    <div class="container">
+      <!-- We'll display main spreadsheet info here -->
+      <div id="mainSpreadsheetContainer" class="main-spreadsheet-block">
+        <div class="main-spreadsheet-title">Main Spreadsheet</div>
+        <div id="mainSpreadsheetInfo">Loading main spreadsheet info...</div>
+      </div>
+
+      <!-- Buttons for config / check -->
+      <button class="btn" onclick="openConfigModal()">Configure</button>
+      <button class="btn" onclick="runComparison()">Check Discrepancies</button>
+      <div id="status" class="status"></div>
+
+      <!-- Container for discrepancy results -->
+      <div id="results"></div>
+    </div>
+
+    <!-- The config modal (hidden by default) -->
+    <div id="configModal" class="modal-overlay">
+      <div class="modal-content">
+        <button class="close-btn" onclick="closeConfigModal()">✕</button>
+        <h2>Configure Spreadsheets</h2>
+        <p>Select which spreadsheets to compare and exactly one main.</p>
+        <div id="configError" class="error"></div>
+
+        <table class="config-table" id="configTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>ID</th>
+              <th>URL</th>
+              <th>Compare</th>
+              <th>Main</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <div style="margin-top:8px;">
+          <button class="btn" onclick="saveConfig()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let masterData = [];
+
+      // On page load, we fetch the main spreadsheet info + any other initialization
+      function initPage() {
+        loadMainSpreadsheet();
+      }
+
+      /*************************************************
+       *  MAIN SPREADSHEET (TOP BLOCK)
+       *************************************************/
+      function loadMainSpreadsheet() {
+        // We assume you have a server function getMainSpreadsheetInfo()
+        google.script.run
+          .withSuccessHandler(function(mainObj) {
+            displayMainSpreadsheet(mainObj);
+          })
+          .withFailureHandler(function(err) {
+            document.getElementById('mainSpreadsheetInfo').textContent =
+              'Error loading main spreadsheet: ' + err.message;
+          })
+          .getMainSpreadsheetInfo();
+      }
+
+      function displayMainSpreadsheet(mainObj) {
+        const container = document.getElementById('mainSpreadsheetInfo');
+        if (!mainObj || !mainObj.spreadsheetId) {
+          container.textContent = '(No valid main spreadsheet found.)';
+          return;
+        }
+
+        const url = 'https://docs.google.com/spreadsheets/d/' + mainObj.spreadsheetId + '/edit';
+        container.innerHTML = `
+          <div><strong>Name:</strong> ${mainObj.spreadsheetName}</div>
+          <div><strong>ID:</strong> ${mainObj.spreadsheetId}</div>
+          <div><strong>URL:</strong> <a href="${url}" target="_blank">Open</a></div>
+        `;
+      }
+
+      /*************************************************
+       *  CONFIG MODAL LOGIC (unchanged from your example)
+       *************************************************/
+      function openConfigModal() {
+        document.getElementById('configModal').style.display = 'block';
+        loadMasterData();
+      }
+      function closeConfigModal() {
+        document.getElementById('configModal').style.display = 'none';
+      }
+      function loadMasterData() {
+        google.script.run
+          .withSuccessHandler(function(data) {
+            masterData = data || [];
+            buildConfigTable();
+          })
+          .withFailureHandler(function(err) {
+            document.getElementById('configError').textContent = 'Error: ' + err.message;
+          })
+          .getMasterConfig();
+      }
+      function buildConfigTable() {
+        const tbody = document.getElementById('configTable').querySelector('tbody');
+        tbody.innerHTML = '';
+        document.getElementById('configError').textContent = '';
+
+        masterData.forEach((row) => {
+          const tr = document.createElement('tr');
+
+          // Name
+          const tdName = document.createElement('td');
+          tdName.textContent = row.spreadsheetName || '(No Name)';
+          tr.appendChild(tdName);
+
+          // ID (first 5 chars)
+          const tdShortId = document.createElement('td');
+          let shortId = '(No ID)';
+          if (row.spreadsheetId) {
+            shortId = row.spreadsheetId.substring(0, 5);
+          }
+          tdShortId.textContent = shortId;
+          tr.appendChild(tdShortId);
+
+          // URL => 'URL' link
+          const tdUrl = document.createElement('td');
+          if (row.spreadsheetId) {
+            const url = 'https://docs.google.com/spreadsheets/d/' + row.spreadsheetId + '/edit';
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.target = '_blank';
+            anchor.textContent = 'URL';
+            tdUrl.appendChild(anchor);
+          } else {
+            tdUrl.textContent = '(No ID)';
+          }
+          tr.appendChild(tdUrl);
+
+          // Compare => checkbox
+          const tdCompare = document.createElement('td');
+          const compareCb = document.createElement('input');
+          compareCb.type = 'checkbox';
+          compareCb.checked = (row.compare === 'Y');
+          compareCb.addEventListener('change', () => {
+            row.compare = compareCb.checked ? 'Y' : 'N';
+          });
+          tdCompare.appendChild(compareCb);
+          tr.appendChild(tdCompare);
+
+          // Main => radio
+          const tdMain = document.createElement('td');
+          const mainRb = document.createElement('input');
+          mainRb.type = 'radio';
+          mainRb.name = 'mainRadioGroup';
+          mainRb.checked = (row.main === 'Y');
+          mainRb.addEventListener('change', () => {
+            masterData.forEach(r => r.main = 'N');
+            row.main = 'Y';
+            buildConfigTable();
+          });
+          tdMain.appendChild(mainRb);
+          tr.appendChild(tdMain);
+
+          tbody.appendChild(tr);
+        });
+      }
+      function saveConfig() {
+        const errDiv = document.getElementById('configError');
+        errDiv.textContent = '';
+
+        // Exactly one main
+        const mainCount = masterData.filter(r => r.main === 'Y').length;
+        if (mainCount !== 1) {
+          errDiv.textContent = 'You must select exactly ONE main spreadsheet.';
+          return;
+        }
+        for (let row of masterData) {
+          if (row.main === 'Y' && row.compare !== 'Y') {
+            errDiv.textContent = `Main spreadsheet (ID: ${row.spreadsheetId}) must also have Compare=Y.`;
+            return;
+          }
+        }
+
+        google.script.run
+          .withSuccessHandler(function() {
+            errDiv.textContent = 'Saved successfully!';
+            // Maybe also refresh the main spreadsheet block in case it changed
+            loadMainSpreadsheet();
+          })
+          .withFailureHandler(function(err) {
+            errDiv.textContent = 'Error: ' + err.message;
+          })
+          .saveMasterConfig(masterData);
+      }
+
+      /*************************************************
+       *  DISCREPANCY CHECK LOGIC (unchanged)
+       *************************************************/
+      function runComparison() {
+        document.getElementById('status').textContent = 'Comparing...';
+        document.getElementById('results').innerHTML = '';
+
+        google.script.run
+          .withSuccessHandler(function(data) {
+            document.getElementById('status').textContent = 'Comparison complete.';
+            if (!data || data.length === 0) {
+              document.getElementById('results').innerHTML = '<p>No data returned.</p>';
+              return;
+            }
+            buildResultsUI(data);
+          })
+          .withFailureHandler(function(err) {
+            document.getElementById('status').textContent = 'Error: ' + err.message;
+          })
+          .getDiscrepancies();
+      }
+      // existing code...
+      function buildResultsUI(data) {
+        const container = document.getElementById('results');
+        container.innerHTML = '';
+
+        data.forEach(spreadsheetResult => {
+          const card = document.createElement('div');
+          card.className = 'spreadsheet-card';
+
+          // Title bar
+          const titleBar = document.createElement('div');
+          titleBar.className = 'spreadsheet-title';
+          const ssUrl = 'https://docs.google.com/spreadsheets/d/' + spreadsheetResult.spreadsheetId + '/edit';
+          titleBar.innerHTML = `
+            <div>
+              ${spreadsheetResult.spreadsheetName}
+              <br>
+              <span>ID: ${spreadsheetResult.spreadsheetId}</span>
+              <br>
+              <span>URL: <a href="${ssUrl}" target="_blank">Open</a></span>
+            </div>
+            <div>Discrepancies: ${spreadsheetResult.discrepancyCount}</div>
+          `;
+          card.appendChild(titleBar);
+
+          // Content area (collapsed by default)
+          const detailsDiv = document.createElement('div');
+          detailsDiv.className = 'spreadsheet-details';
+          card.appendChild(detailsDiv);
+
+          // Group by tab
+          const groupedByTab = {};
+          spreadsheetResult.discrepancies.forEach(d => {
+            const tab = d.tabName;
+            if (!groupedByTab[tab]) {
+              groupedByTab[tab] = [];
+            }
+            groupedByTab[tab].push(d);
+          });
+
+          const tabNames = Object.keys(groupedByTab);
+          if (tabNames.length === 0) {
+            detailsDiv.innerHTML = '<p class="no-discrepancies">No discrepancies found.</p>';
+          } else {
+            // For each tab
+            tabNames.forEach(tabName => {
+              const arr = groupedByTab[tabName];
+
+              const tabCard = document.createElement('div');
+              tabCard.className = 'tab-card';
+
+              const tabTitle = document.createElement('div');
+              tabTitle.className = 'tab-title';
+              tabTitle.textContent = `Tab: ${tabName} (${arr.length} discrepancy${arr.length===1?'':'s'})`;
+              tabCard.appendChild(tabTitle);
+
+              const tabDetails = document.createElement('div');
+              tabDetails.className = 'tab-details';
+
+              // Now each item in arr might be: missingTab, extraTab, or columnGroup
+              arr.forEach(d => {
+                if (d.type === 'missingTab') {
+                  const item = document.createElement('div');
+                  item.className = 'discrepancy-item';
+                  item.innerHTML = `<strong>Tab is missing in other spreadsheet</strong>`;
+                  tabDetails.appendChild(item);
+                } else if (d.type === 'extraTab') {
+                  const item = document.createElement('div');
+                  item.className = 'discrepancy-item';
+                  item.innerHTML = `<strong>Extra tab (not in main)</strong>`;
+                  tabDetails.appendChild(item);
+                } else if (d.type === 'columnGroup') {
+                  // *One item* per column => We'll show "Column X (# issues)" and let user expand
+                  const colCard = document.createElement('div');
+                  colCard.className = 'tab-card'; // or similar styling
+
+                  const colTitle = document.createElement('div');
+                  colTitle.className = 'tab-title';
+
+                  // How many total issues in this column? 
+                  //  1 if headerMismatch is present, plus formulaMismatches.length
+                  const headerIssueCount = d.headerMismatch ? 1 : 0;
+                  const formulaIssueCount = d.formulaMismatches.length;
+                  const colIssueCount = headerIssueCount + formulaIssueCount;
+                  
+                  colTitle.textContent = `Column ${d.columnLetter} (${colIssueCount} issue${colIssueCount===1?'':'s'})`;
+                  colCard.appendChild(colTitle);
+
+                  const colDetails = document.createElement('div');
+                  colDetails.className = 'tab-details';
+
+                  // 1) If there's a header mismatch
+                  if (d.headerMismatch) {
+                    const item = document.createElement('div');
+                    item.className = 'discrepancy-item';
+                    item.innerHTML = `
+                      <strong>Header mismatch</strong><br>
+                      Main: ${d.headerMismatch.mainHeader}<br>
+                      Other: ${d.headerMismatch.otherHeader}
+                    `;
+                    colDetails.appendChild(item);
+                  }
+
+                  // 2) If there are formula mismatches
+                  if (d.formulaMismatches.length > 0) {
+                    d.formulaMismatches.forEach(fm => {
+                      const item = document.createElement('div');
+                      item.className = 'discrepancy-item';
+                      item.innerHTML = `
+                        <strong>Row ${fm.rowNumber} formula mismatch</strong><br>
+                        Main: ${fm.mainFormula}<br>
+                        Other: ${fm.otherFormula}
+                      `;
+                      colDetails.appendChild(item);
+                    });
+                  }
+
+                  colCard.appendChild(colDetails);
+
+                  // Expand/collapse the column details
+                  colTitle.addEventListener('click', () => {
+                    colDetails.style.display = (colDetails.style.display === 'block') ? 'none' : 'block';
+                  });
+
+                  tabDetails.appendChild(colCard);
+                }
+              });
+
+              tabCard.appendChild(tabDetails);
+
+              // Expand/collapse the entire tab
+              tabTitle.addEventListener('click', () => {
+                tabDetails.style.display = (tabDetails.style.display === 'block') ? 'none' : 'block';
+              });
+
+              tabDetails.style.display = 'none'; // default collapsed
+              tabCard.appendChild(tabDetails);
+              tabCard.style.marginBottom = '8px';
+
+              tabCard.appendChild(tabDetails);
+              tabDetails.style.marginLeft = '16px';
+
+              tabCard.appendChild(tabDetails);
+              tabCard.style.borderLeft = '3px solid #1976d2';
+              tabCard.style.paddingLeft = '12px';
+
+              tabDetails.style.marginTop = '4px';
+              tabCard.style.marginTop = '12px';
+
+              tabCard.appendChild(tabDetails);
+              tabDetails.style.display = 'none';
+
+              tabDetails.style.marginLeft = '16px';
+
+              tabCard.appendChild(tabDetails);
+              tabDetails.style.marginTop = '4px';
+
+              tabDetails.style.display = 'none';
+
+              tabCard.style.marginTop = '12px';
+
+              tabDetails.style.display = 'none';
+
+              tabDetails.style.marginLeft = '16px';
+
+              tabCard.appendChild(tabDetails);
+
+              tabDetails.style.marginTop = '4px';
+
+              tabDetails.style.display = 'none';
+
+              tabCard.appendChild(tabDetails);
+
+              tabDetails.style.display = 'none';
+
+              // Finally, add the entire tabCard to the tab container
+              tabCard.appendChild(tabDetails);
+              tabDetails.style.display = 'none';
+
+              detailsDiv.appendChild(tabCard);
+            });
+          }
+
+          // Toggle the entire spreadsheet
+          titleBar.addEventListener('click', () => {
+            detailsDiv.style.display = (detailsDiv.style.display === 'block') ? 'none' : 'block';
+          });
+
+          container.appendChild(card);
+        });
+      }
+
+    </script>
+  </body>
+</html>
