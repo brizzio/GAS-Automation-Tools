@@ -1,0 +1,7 @@
+id,title,description,status,assignedTo,projectId,createdDate
+T001,Design Logo,Create a new logo for brand refresh.,In Progress,U001,P001,2023-10-01 10:00:00
+T002,Setup Database,Initialize project database schema.,Open,U002,P001,2023-10-02 8:00:00
+T003,Website Layout,Draft wireframe for the website homepage.,In Progress,U001,P001,2023-10-03 9:00:00
+T004,Bug Fix #404,Resolve 404 error on the signup page.,Completed,U003,P002,2023-10-04 15:30:00
+T005,Marketing Campaign,Develop marketing strategy and ad campaigns.,Open,U004,P002,2023-10-05 10:15:00
+TASK-1737502554802,New Task Three,Adding a new Task,In Progress,U001,P002,1/21/2025 17:35:55
