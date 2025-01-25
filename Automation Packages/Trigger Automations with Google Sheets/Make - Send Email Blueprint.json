@@ -1,0 +1,396 @@
+{
+    "name": "Send Notification Email",
+    "flow": [
+        {
+            "id": 2,
+            "module": "gateway:CustomWebHook",
+            "version": 1,
+            "parameters": {
+                "hook": 123456,
+                "maxResults": 1
+            },
+            "mapper": {},
+            "metadata": {
+                "designer": {
+                    "x": -682,
+                    "y": -56
+                },
+                "restore": {
+                    "parameters": {
+                        "hook": {
+                            "label": "SheetsTriggeredAutomation",
+                            "data": {
+                                "editable": "true"
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "hook",
+                        "type": "hook:gateway-webhook",
+                        "label": "Webhook",
+                        "required": true
+                    },
+                    {
+                        "name": "maxResults",
+                        "type": "number",
+                        "label": "Maximum number of results"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 3,
+            "module": "util:SetVariables",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "variables": [
+                    {
+                        "name": "RecipientEmail",
+                        "value": "{{2.Email}}"
+                    },
+                    {
+                        "name": "EmailSubject",
+                        "value": "Task Completed - {{2.`Task Name`}} - {{2.`Task ID`}}"
+                    },
+                    {
+                        "name": "EmailMessage",
+                        "value": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Task Notification</title>\n  <style>\n    /* Basic reset */\n    body {\n      margin: 0; \n      padding: 0; \n      background-color: #f5f7fa;\n      font-family: Arial, sans-serif;\n    }\n    .container {\n      max-width: 600px; \n      margin: 40px auto; \n      padding: 20px; \n      background-color: #ffffff; \n      border-radius: 6px; \n      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);\n    }\n    h1 {\n      margin-top: 0; \n      text-align: center; \n      color: #333333;\n    }\n    p {\n      line-height: 1.6; \n      color: #555555; \n      margin: 0 0 15px;\n    }\n    .highlight {\n      font-weight: bold; \n      color: #007bff;\n    }\n    .notes {\n      margin: 15px 0; \n      padding: 10px; \n      background-color: #f9f9f9; \n      border-left: 4px solid #007bff;\n    }\n    .footer {\n      text-align: center; \n      font-size: 13px; \n      color: #999999; \n      margin-top: 20px;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <h1>Task Status Update</h1>\n    \n    <p>Hello {{2.Client}}<span class=\"highlight\"></span>,</p>\n    \n    <p>\n      <span class=\"highlight\">{{2.`Assigned To`}}</span> has moved the status of the \n      following task to <span class=\"highlight\">{{2.Status}} </span>:\n    </p>\n    \n    <p style=\"margin-left: 20px;\">\n      <strong>{{2.`Task ID`}} - {{2.`Task Name`}} </strong>\n    </p>\n\n    <p>Please see the notes for this task below:</p>\n    <div class=\"notes\">\n      {{2.Notes}}\n    </div>\n\n    <p>\n      If you have any questions or concerns, please let us know.\n    </p>\n\n    <p>\n      Thank you,<br>\n      <em>Your Team</em>\n    </p>\n\n    <div class=\"footer\">\n      &copy; 2025 Your Company. All rights reserved.\n    </div>\n  </div>\n</body>\n</html>"
+                    }
+                ],
+                "scope": "roundtrip"
+            },
+            "metadata": {
+                "designer": {
+                    "x": -382,
+                    "y": -56
+                },
+                "restore": {
+                    "expect": {
+                        "variables": {
+                            "items": [
+                                null,
+                                null,
+                                null
+                            ]
+                        },
+                        "scope": {
+                            "label": "One cycle"
+                        }
+                    }
+                },
+                "expect": [
+                    {
+                        "name": "variables",
+                        "type": "array",
+                        "label": "Variables",
+                        "spec": [
+                            {
+                                "name": "name",
+                                "label": "Variable name",
+                                "type": "text",
+                                "required": true
+                            },
+                            {
+                                "name": "value",
+                                "label": "Variable value",
+                                "type": "any"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "scope",
+                        "type": "select",
+                        "label": "Variable lifetime",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "roundtrip",
+                                "execution"
+                            ]
+                        }
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "RecipientEmail",
+                        "label": "RecipientEmail",
+                        "type": "any"
+                    },
+                    {
+                        "name": "EmailSubject",
+                        "label": "EmailSubject",
+                        "type": "any"
+                    },
+                    {
+                        "name": "EmailMessage",
+                        "label": "EmailMessage",
+                        "type": "any"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 4,
+            "module": "email:ActionSendEmail",
+            "version": 7,
+            "parameters": {
+                "account": 1234567,
+                "saveAfterSent": false
+            },
+            "mapper": {
+                "to": [
+                    "{{3.RecipientEmail}}"
+                ],
+                "subject": "{{3.EmailSubject}}",
+                "contentType": "html",
+                "attachments": [],
+                "cc": [],
+                "bcc": [],
+                "from": "",
+                "sender": "",
+                "replyTo": "",
+                "inReplyTo": "",
+                "references": [],
+                "priority": "normal",
+                "headers": [],
+                "html": "{{3.EmailMessage}}"
+            },
+            "metadata": {
+                "designer": {
+                    "x": -82,
+                    "y": -56
+                },
+                "restore": {
+                    "parameters": {
+                        "account": {
+                            "label": "User Restricted",
+                            "data": {
+                                "scoped": "true",
+                                "connection": "google-restricted"
+                            }
+                        },
+                        "saveAfterSent": {
+                            "label": "No"
+                        }
+                    },
+                    "expect": {
+                        "to": {
+                            "mode": "chose",
+                            "items": [
+                                null
+                            ]
+                        },
+                        "contentType": {
+                            "label": "HTML"
+                        },
+                        "attachments": {
+                            "mode": "chose"
+                        },
+                        "cc": {
+                            "mode": "chose"
+                        },
+                        "bcc": {
+                            "mode": "chose"
+                        },
+                        "references": {
+                            "mode": "chose"
+                        },
+                        "priority": {
+                            "label": "Normal"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "account",
+                        "type": "account:smtp,google-restricted,microsoft-smtp-imap",
+                        "label": "Connection",
+                        "required": true
+                    },
+                    {
+                        "name": "saveAfterSent",
+                        "type": "select",
+                        "label": "Save message after sending",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                true,
+                                false
+                            ]
+                        }
+                    },
+                    {
+                        "type": "hidden"
+                    }
+                ],
+                "expect": [
+                    {
+                        "name": "to",
+                        "type": "array",
+                        "label": "To",
+                        "required": true,
+                        "spec": {
+                            "name": "value",
+                            "type": "email",
+                            "label": "Email address",
+                            "required": true
+                        }
+                    },
+                    {
+                        "name": "subject",
+                        "type": "text",
+                        "label": "Subject"
+                    },
+                    {
+                        "name": "contentType",
+                        "type": "select",
+                        "label": "Content Type",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "html",
+                                "text"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "attachments",
+                        "type": "array",
+                        "label": "Attachments",
+                        "spec": [
+                            {
+                                "name": "fileName",
+                                "label": "File name",
+                                "type": "filename",
+                                "required": true,
+                                "semantic": "file:name"
+                            },
+                            {
+                                "name": "data",
+                                "label": "Data",
+                                "type": "buffer",
+                                "required": true,
+                                "semantic": "file:data"
+                            },
+                            {
+                                "name": "cid",
+                                "label": "Content-ID",
+                                "type": "text"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "cc",
+                        "type": "array",
+                        "label": "Copy recipient",
+                        "spec": {
+                            "name": "value",
+                            "type": "email",
+                            "label": "Email address"
+                        }
+                    },
+                    {
+                        "name": "bcc",
+                        "type": "array",
+                        "label": "Blind copy recipient",
+                        "spec": {
+                            "name": "value",
+                            "type": "email",
+                            "label": "Email address"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "type": "text",
+                        "label": "From"
+                    },
+                    {
+                        "name": "sender",
+                        "type": "text",
+                        "label": "Sender"
+                    },
+                    {
+                        "name": "replyTo",
+                        "type": "text",
+                        "label": "Reply-To"
+                    },
+                    {
+                        "name": "inReplyTo",
+                        "type": "text",
+                        "label": "In-Reply-To"
+                    },
+                    {
+                        "name": "references",
+                        "type": "array",
+                        "label": "References",
+                        "spec": {
+                            "type": "text",
+                            "label": "Reference",
+                            "required": true,
+                            "name": "value"
+                        }
+                    },
+                    {
+                        "name": "priority",
+                        "type": "select",
+                        "label": "Priority",
+                        "validate": {
+                            "enum": [
+                                "high",
+                                "normal",
+                                "low"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "headers",
+                        "type": "array",
+                        "label": "Headers",
+                        "spec": [
+                            {
+                                "name": "key",
+                                "label": "Key",
+                                "type": "text",
+                                "required": true
+                            },
+                            {
+                                "name": "value",
+                                "label": "Value",
+                                "type": "text",
+                                "required": true
+                            }
+                        ]
+                    },
+                    {
+                        "name": "html",
+                        "type": "text",
+                        "label": "Content"
+                    }
+                ]
+            }
+        }
+    ],
+    "metadata": {
+        "instant": true,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "us2.make.com"
+    }
+}
