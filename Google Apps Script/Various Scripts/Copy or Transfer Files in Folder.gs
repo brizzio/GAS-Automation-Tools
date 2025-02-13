@@ -1,5 +1,5 @@
 //=============================================
-//Make sure the "Drive" service is enabled
+// Make sure the "Drive" service is enabled
 //=============================================
 
 /**
@@ -9,7 +9,13 @@
  * in the folder with the same name (no "Copy of" prefix).
  */
 function copyAllParentContentsIntoCopies() {
-  var parentFolderId = "YOUR_PARENT_FOLDER_ID_HERE";
+  // Retrieve PARENT_FOLDER_ID from Script Properties
+  var scriptProperties = PropertiesService.getScriptProperties();
+  var parentFolderId = scriptProperties.getProperty("PARENT_FOLDER_ID");
+  if (!parentFolderId) {
+    Logger.log("Error: 'PARENT_FOLDER_ID' is not set in Script Properties.");
+    return;
+  }
 
   Logger.log("Starting copy process for parent folder ID: %s", parentFolderId);
   var parentFolder = DriveApp.getFolderById(parentFolderId);
@@ -86,9 +92,8 @@ function copyFileOrScript(file, destination) {
     // Now forcibly move and rename it so it shows up in the UI with the correct title
     var movedFile = DriveApp.getFileById(newFile.id);
     movedFile.moveTo(destination);
-    movedFile.setName(originalName);      // <-- Force the name we want!
+    movedFile.setName(originalName); // <-- Force the name we want!
     Logger.log("    Copied Apps Script '%s' to folder: %s", originalName, destination.getName());
-
   } else {
     // For all other file types, makeCopy() retains the original name by default
     Logger.log("    -> Using makeCopy for: " + originalName);
