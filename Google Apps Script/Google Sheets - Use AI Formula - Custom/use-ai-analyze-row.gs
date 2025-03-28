@@ -1,4 +1,3 @@
-
 /**
  * Custom function to combine column headers + row values + a prompt, then
  * analyze via OpenAI.
@@ -9,19 +8,17 @@
  * @return {string} - The AI's response.
  */
 function AIAnalyzeRow(headerRange, dataRange, prompt) {
-  // 1. Your OpenAI API Key (better to store securely in Script Properties).
-  var apiKey = 'OPEN AI API KEY';
+  // 1. Retrieve your OpenAI API key from Script Properties.
+  var apiKey = PropertiesService.getScriptProperties().getProperty('OPEN_AI_API_KEY');
+  if (!apiKey) {
+    return 'Error: No API key found in script properties (OPEN_AI_API_KEY).';
+  }
 
   // 2. Convert the range arguments to 2D arrays.
   var headers = headerRange;
   var values = dataRange;
 
   // If you only pass a single row for headers/values, they should be 2D arrays with 1 row each.
-  // e.g., headers might be [["Due Date","Status","Client Name","Notes"]]
-  // e.g., values  might be [["2023-01-01","In Progress","Acme Corp","Waiting for confirmation"]]
-
-  // Flatten them from 2D to 1D.
-  // Because we expect exactly one row in each range, we can do headers[0], values[0].
   if (headers.length > 0) {
     headers = headers[0];
   }
@@ -43,7 +40,7 @@ ${prompt}
 
 Here are the column-value pairs for the record:
 ${tableText}
-  `;
+`;
 
   // 5. Set up the request payload for the Chat Completion API (GPT-3.5-turbo).
   var requestData = {
@@ -55,7 +52,7 @@ ${tableText}
     max_tokens: 1000
   };
 
-  // 6. Set up the UrlFetchApp options.
+  // 6. Set up UrlFetchApp options.
   var options = {
     method: 'post',
     contentType: 'application/json',

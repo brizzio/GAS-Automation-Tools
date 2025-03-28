@@ -1,5 +1,6 @@
 /**
- * Custom function to analyze cell content with OpenAI's API.
+ * Custom function to analyze cell content with OpenAI's API,
+ * using an API key stored in the Script Properties.
  *
  * @param {string} content The text content you want to analyze (e.g., a cell reference).
  * @param {string} prompt The instruction/prompt for the AI (e.g., "Extract phone numbers").
@@ -8,20 +9,24 @@
  * Usage in Sheet: =UseAI(A2, "Extract phone numbers from this text")
  */
 function UseAI(content, prompt) {
-  // 1. Insert your OpenAI API Key here (or use Script Properties for security in production).
-  var apiKey = 'OPEN AI API KEY';
+  // 1. Retrieve your OpenAI API key from Script Properties (set this up via Apps Script > Project Settings).
+  var apiKey = PropertiesService.getScriptProperties().getProperty("OPEN_AI_API_KEY");
   
+  if (!apiKey) {
+    return "Error: No API key found in script properties (OPEN_AI_API_KEY).";
+  }
+
   // 2. Construct the message for the AI. You can customize as needed:
   var userMessage = `${prompt}\n\nHere is the content:\n${content}`;
 
-  // 3. Set up the request payload for the Chat API (gpt-3.5-turbo or your model of choice).
+  // 3. Set up the request payload for the Chat API (gpt-3.5-turbo or your preferred model).
   var requestData = {
     model: 'gpt-3.5-turbo',
     messages: [
       { role: 'user', content: userMessage }
     ],
-    temperature: 0.7,        // Adjust creativity as needed
-    max_tokens: 1000         // Adjust or omit based on your needs
+    temperature: 0.7,   // Adjust creativity as needed
+    max_tokens: 1000    // Adjust or omit based on your needs
   };
 
   // 4. Set up UrlFetchApp options.
@@ -46,7 +51,7 @@ function UseAI(content, prompt) {
       return reply;
     } else {
       // Fallback if we don't get a proper response.
-      return "Unknown.";
+      return "Unknown response from the AI.";
     }
   } catch (e) {
     // 7. Catch any errors (e.g., timeouts, API errors) and return a message instead of throwing.
